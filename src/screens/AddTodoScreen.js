@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View,TextInput,TouchableOpacity,Text,Image,StyleSheet, } from 'react-native';
 import { addTodo } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 
-export default function AddTodoScreen() {
+export default function AddTodoScreen({ route }) {
+  const { type } = route.params || {}; 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [image, setImage] = useState(null);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const navigation = useNavigation();
 
   const handleAddTodo = async () => {
@@ -16,17 +21,55 @@ export default function AddTodoScreen() {
       description,
       status: 'in-progress',
       date,
+      image, 
     });
     navigation.goBack();
+  };
+
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirm = (selectedDate) => {
+    setDate(selectedDate.toLocaleDateString());
+    hideDatePicker();
+  };
+
+
+  const selectImage = () => {
+    launchImageLibrary( 
+      {
+        mediaType: 'photo',
+        quality: 1,
+      },
+      (response) => {
+        if (response.didCancel) {
+          console.log('User canceled image picker');
+        } else if (response.errorMessage) {
+          console.error('ImagePicker Error: ', response.errorMessage);
+        } else {
+          const selectedImage = response.assets[0];
+          setImage(selectedImage.uri); 
+        }
+      }
+    );
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backContainer}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Add Todo</Text>
+        <Text style={styles.headerText}>
+          {type === 'image' ? 'Add Todo with Image' : 'Add New Todo'}
+        </Text>
       </View>
 
       <TextInput
@@ -45,14 +88,41 @@ export default function AddTodoScreen() {
         multiline={true}
         numberOfLines={4}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Deadline (Optional)"
-        placeholderTextColor="#FFFFFF"
-        value={date}
-        onChangeText={setDate}
+
+      <TouchableOpacity style={styles.input} onPress={showDatePicker}>
+        <Text style={styles.inputText}>
+          {date ? date : 'Select Deadline'}
+        </Text>
+      </TouchableOpacity>
+
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
       />
-      <TouchableOpacity style={styles.button} onPress={handleAddTodo}>
+
+      {type === 'image' && (
+        <>
+          <TouchableOpacity 
+          style={styles.uploadButton} onPress={selectImage}>
+            <Text style={styles.uploadButtonText}>Select Image</Text>
+          </TouchableOpacity>
+          
+          {image && (
+            <Image
+              source={{ uri: image }}
+              style={styles.imagePreview}
+              resizeMode="cover"
+            />
+          )}
+        </>
+      )}
+
+      <TouchableOpacity
+        style={styles.button}
+        testID="add-todo-button"
+        onPress={handleAddTodo}>
         <Text style={styles.buttonText}>Add Todo</Text>
       </TouchableOpacity>
     </View>
@@ -77,7 +147,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
-
   input: {
     backgroundColor: 'transparent',
     borderWidth: 1,
@@ -102,5 +171,26 @@ const styles = StyleSheet.create({
     color: '#F79E89',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  inputText: {
+    color: '#FFFFFF',
+  },
+  uploadButton: {
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  uploadButtonText: {
+    color: '#F79E89',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  imagePreview: {
+    marginTop: 10,
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
   },
 });

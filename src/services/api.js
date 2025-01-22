@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const apiUrl = 'https://672ca2271600dda5a9f93dc9.mockapi.io/Todo';
 
-
 export const getTodos = async () => {
   try {
     const response = await axios.get(apiUrl);
@@ -13,9 +12,8 @@ export const getTodos = async () => {
   }
 };
 
-
 export const getTodoById = async (id) => {
-  try {
+  try { 
     const response = await axios.get(`${apiUrl}/${id}`);
     return response;
   } catch (error) {
@@ -34,7 +32,6 @@ export const addTodo = async (newTodo) => {
   }
 };
 
-
 export const updateTodo = async (id, updatedTodo) => {
   try {
     const response = await axios.put(`${apiUrl}/${id}`, updatedTodo);
@@ -44,7 +41,6 @@ export const updateTodo = async (id, updatedTodo) => {
     throw error;
   }
 };
-
 
 export const deleteTodo = async (id) => {
   try {

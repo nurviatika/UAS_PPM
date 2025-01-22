@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView, Image } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getTodoById, deleteTodo } from '../services/api';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -7,13 +8,15 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 export default function DetailTodoScreen() {
   const [todo, setTodo] = useState(null);
   const [modalVisible, setModalVisible] = useState(false); 
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const route = useRoute();
   const navigation = useNavigation();
-  const { id } = route.params;
+  const { id} = route.params;
 
   useEffect(() => {
     fetchTodo();
-  }, []);
+  }, [id]);
 
   const fetchTodo = async () => {
     try {
@@ -35,6 +38,11 @@ export default function DetailTodoScreen() {
     }
   };
 
+  const handleImageClick = (imageUri) => {
+    setSelectedImage(imageUri);
+    setImageModalVisible(true);
+  };
+
   return (
     <View style={styles.container}>
       {todo && (
@@ -52,11 +60,20 @@ export default function DetailTodoScreen() {
 
             <Text style={styles.title}>{todo.title}</Text>
             <Text style={styles.description}>{todo.description}</Text>
-
             <View style={styles.dateContainer}>
               <Ionicons name="time" size={22} color="#FFFFFF" />
               <Text style={styles.date}>Deadline {todo.date}</Text>
             </View>
+
+            {todo.image && (
+              <TouchableOpacity onPress={() => handleImageClick(todo.image)}>
+                <Image
+                  source={{ uri: todo.image }}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity style={styles.deleteButton} onPress={() => setModalVisible(true)}>
               <Ionicons name="trash" size={24} color="#FFFFFF" />
@@ -81,6 +98,26 @@ export default function DetailTodoScreen() {
                     <Text style={styles.modalButtonText}>Delete</Text>
                   </TouchableOpacity>
                 </View>
+              </View>
+            </View>
+          </Modal>
+
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={imageModalVisible}
+            onRequestClose={() => setImageModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.imageModalContent}>
+                <TouchableOpacity onPress={() => setImageModalVisible(false)} style={styles.closeModalButton}>
+                  <Ionicons name="close" size={30} color="#FFFFFF" />
+                </TouchableOpacity>
+                <Image
+                  source={{ uri: selectedImage }}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
               </View>
             </View>
           </Modal>
@@ -146,6 +183,12 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 16,
   },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -185,5 +228,25 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
+  },
+  imageModalContent: {
+    width: '90%',
+    height: '70%',
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    padding: 10,
+  },
+  fullImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
 });

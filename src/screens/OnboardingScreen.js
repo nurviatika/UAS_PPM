@@ -21,12 +21,17 @@ export default function OnboardingScreen({ navigation }) {
           <Text style={styles.logoText}> </Text> 
           <Text style={styles.logoText}>S</Text>
         </View>
+        <View style={styles.column}>
+          <Text style={styles.logoText}> </Text> 
+          <Text style={styles.logoText}> </Text> 
+          <Text style={styles.logoText}>T</Text>
+        </View>
         
         <Ionicons name="create-outline" size={60} color="#F79E89" style={styles.logoIcon} />
       </View>
       <TouchableOpacity
         style={styles.button} 
-        onPress={() => navigation.navigate('Home')}
+        onPress={() => navigation.navigate('SignIn')}
       >
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>

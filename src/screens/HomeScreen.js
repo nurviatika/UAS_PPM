@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View,Text,FlatList,TouchableOpacity,StyleSheet,Animated, } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getTodos } from '../services/api';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
-
 export default function HomeScreen() {
   const [todos, setTodos] = useState([]);
+  const [showActions, setShowActions] = useState(false); 
+  const [animation] = useState(new Animated.Value(0)); 
   const navigation = useNavigation();
 
   const fetchTodos = async () => {
@@ -16,6 +17,27 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error fetching todos:', error);
     }
+  };
+
+  const toggleActions = () => {
+    setShowActions(!showActions); 
+    Animated.timing(animation, {
+      toValue: showActions ? 0 : 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const actionStyle = {
+    transform: [
+      {
+        translateY: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [50, 0], 
+        }),
+      },
+    ],
+    opacity: animation, 
   };
 
   useFocusEffect(
@@ -28,12 +50,6 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.header}>TO DO LIST</Text>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => console.log('Filter button pressed')}
-        >
-          <Ionicons name="filter-outline" size={24} color="#F79E89" />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.subHeaderContainer}>
@@ -55,13 +71,35 @@ export default function HomeScreen() {
         )}
       />
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => navigation.navigate('AddTodo')}
-      >
-        <Ionicons name="add-circle" size={24} color="#FFF" />
-      </TouchableOpacity>
+      {showActions && (
+        <Animated.View style={[styles.actionContainer, actionStyle]}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => {
+              setShowActions(false);
+              navigation.navigate('AddTodo', { type: 'image' });
+            }}
+          >
+            <Ionicons name="image-outline" size={20} color="#FFF" />
+            <Text style={styles.actionText}>Image</Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => {
+              setShowActions(false);
+              navigation.navigate('AddTodo', { type: 'text' });
+            }}
+          >
+            <Ionicons name="text-outline" size={20} color="#FFF" />
+            <Text style={styles.actionText}>Text</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      <TouchableOpacity style={styles.addButton} onPress={toggleActions}>
+        <Ionicons name={showActions ? 'close' : 'add-circle'} size={30} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -83,18 +121,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#F79E89',
   },
-  filterButton: {
-    padding: 8,
-  },
   subHeaderContainer: {
     alignItems: 'center',
     marginBottom: 16,
   },
   subHeader: {
     fontSize: 21,
-    fontWeight: '600',
     fontWeight: 'bold',
-    color: '#db7d67',
+    color: '#DB7D67',
     textAlign: 'center',
   },
   todoItem: {
@@ -128,5 +162,26 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 5,
+  },
+  actionContainer: {
+    position: 'absolute',
+    bottom: 110,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    backgroundColor: '#F79E89',
+    borderRadius: 30,
+    padding: 10,
+    marginHorizontal: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionText: {
+    marginTop: 5,
+    fontSize: 12,
+    color: '#FFF',
   },
 });
